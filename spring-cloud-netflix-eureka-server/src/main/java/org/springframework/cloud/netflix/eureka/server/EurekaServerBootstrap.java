@@ -65,9 +65,17 @@ public class EurekaServerBootstrap {
 		this.serverContext = serverContext;
 	}
 
+	/**
+	 * 初始化Eureka服务的上下文
+	 *
+	 * @param context
+	 */
 	public void contextInitialized(ServletContext context) {
 		try {
+			// 只是输出了"Setting the eureka configuration.."日志
 			initEurekaEnvironment();
+
+			/** 重要方法！！开始初始化Eureka服务的上下文 */
 			initEurekaServerContext();
 
 			context.setAttribute(EurekaServerContext.class.getName(), this.serverContext);
@@ -98,11 +106,15 @@ public class EurekaServerBootstrap {
 
 	}
 
-	protected void initEurekaServerContext() throws Exception {
-		// For backward compatibility
+	/**
+	 * 初始化Eureka服务的上下文
+	 */
+	protected void  initEurekaServerContext() throws Exception {
+		// For backward compatibility 为了向后兼容
 		JsonXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(), XStream.PRIORITY_VERY_HIGH);
 		XmlXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(), XStream.PRIORITY_VERY_HIGH);
 
+		/** 针对AWS的处理逻辑 */
 		if (isAws(this.applicationInfoManager.getInfo())) {
 			this.awsBinder = new AwsBinderDelegate(this.eurekaServerConfig, this.eurekaClientConfig, this.registry,
 					this.applicationInfoManager);
@@ -114,7 +126,10 @@ public class EurekaServerBootstrap {
 		log.info("Initialized server context");
 
 		// Copy registry from neighboring eureka node
+		/** 服务间副本同步逻辑——server replicate */
 		int registryCount = this.registry.syncUp();
+
+		/** 服务剔除逻辑——server evict */
 		this.registry.openForTraffic(this.applicationInfoManager, registryCount);
 
 		// Register all monitoring statistics.

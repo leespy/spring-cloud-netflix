@@ -33,6 +33,9 @@ import org.springframework.core.Ordered;
 import org.springframework.web.context.ServletContextAware;
 
 /**
+ * Eureka服务端初始化配置类。
+ * SmartLifecycle接口
+ *
  * @author Dave Syer
  */
 @Configuration(proxyBeanMethods = false)
@@ -60,16 +63,28 @@ public class EurekaServerInitializerConfiguration implements ServletContextAware
 		this.servletContext = servletContext;
 	}
 
+	/**
+	 * 服务端启动方法
+	 */
 	@Override
 	public void start() {
 		new Thread(() -> {
 			try {
-				// TODO: is this class even needed now?
+				/**
+				 * 调用完EurekaServerBootstrap的contextInitialized方法后，则会输出"Started Eureka Server"
+				 * 那么我们就可以想象到，contextInitialized方法中保护的就是Eureka服务启动的逻辑
+				 * */
 				eurekaServerBootstrap.contextInitialized(EurekaServerInitializerConfiguration.this.servletContext);
+
 				log.info("Started Eureka Server");
 
+				// 因为Eureka Server已经启动了，所以发布Eureka Server注册中心启动事件
 				publish(new EurekaRegistryAvailableEvent(getEurekaServerConfig()));
+
+				// 设置Eureka Server是运行中
 				EurekaServerInitializerConfiguration.this.running = true;
+
+				// 发布Eureka Server启动事件
 				publish(new EurekaServerStartedEvent(getEurekaServerConfig()));
 			}
 			catch (Exception ex) {
@@ -103,6 +118,10 @@ public class EurekaServerInitializerConfiguration implements ServletContextAware
 		return 0;
 	}
 
+	/**
+	 * true，则表明会在finishRefresh()方法中调用start()方法
+	 * @return
+	 */
 	@Override
 	public boolean isAutoStartup() {
 		return true;

@@ -89,9 +89,11 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 	@Autowired
 	private ApplicationInfoManager applicationInfoManager;
 
+	// Eureka服务端相关配置
 	@Autowired
 	private EurekaServerConfig eurekaServerConfig;
 
+	// Eureka客户端相关配置
 	@Autowired
 	private EurekaClientConfig eurekaClientConfig;
 
@@ -143,6 +145,9 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 		return new ReplicationClientAdditionalFilters(Collections.emptySet());
 	}
 
+	/**
+	 * 初始化集群注册表——PeerAwareInstanceRegistry
+	 */
 	@Bean
 	public PeerAwareInstanceRegistry peerAwareInstanceRegistry(ServerCodecs serverCodecs) {
 		this.eurekaClient.getApplications(); // force initialization
@@ -151,6 +156,9 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				this.instanceRegistryProperties.getDefaultOpenForTrafficCount());
 	}
 
+	/**
+	 * 初始化集群节点集合——PeerEurekaNodes
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public PeerEurekaNodes peerEurekaNodes(PeerAwareInstanceRegistry registry, ServerCodecs serverCodecs,
@@ -159,6 +167,9 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				this.applicationInfoManager, replicationClientAdditionalFilters);
 	}
 
+	/**
+	 * Eureka服务端上下文——EurekaServerContext
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public EurekaServerContext eurekaServerContext(ServerCodecs serverCodecs, PeerAwareInstanceRegistry registry,
@@ -167,6 +178,9 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				this.applicationInfoManager);
 	}
 
+	/**
+	 * Eureka服务端启动类——EurekaServerBootstrap
+	 */
 	@Bean
 	public EurekaServerBootstrap eurekaServerBootstrap(PeerAwareInstanceRegistry registry,
 			EurekaServerContext serverContext) {
@@ -175,9 +189,7 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 	}
 
 	/**
-	 * Register the Jersey filter.
-	 * @param eurekaJerseyApp an {@link Application} for the filter to be registered
-	 * @return a jersey {@link FilterRegistrationBean}
+	 * jersey过滤器——FilterRegistrationBean
 	 */
 	@Bean
 	public FilterRegistrationBean<?> jerseyFilterRegistration(javax.ws.rs.core.Application eurekaJerseyApp) {
